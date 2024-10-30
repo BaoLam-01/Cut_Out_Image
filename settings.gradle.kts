@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Cut Out Image"
 include(":app")
- 
