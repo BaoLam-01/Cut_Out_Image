@@ -18,11 +18,12 @@ import android.util.Log
 import android.view.DragEvent
 import android.view.MotionEvent
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-class CutOutView : View {
+class CutOutView : androidx.appcompat.widget.AppCompatImageView {
 
     private val path: Path = Path()
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -37,10 +38,10 @@ class CutOutView : View {
     constructor(context: Context) : super(context, null)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-    private lateinit var listener : (isReady: Boolean) -> Unit
+    private lateinit var listener: (isReady: Boolean) -> Unit
 
     private var viewCanvasWidth: Int = 0
-    private var viewCanvasHeight : Int = 0
+    private var viewCanvasHeight: Int = 0
 
     private var targetOriginalBitmap: Bitmap? = null
     private var actualVisibleBitmap: Bitmap? = null
@@ -62,7 +63,8 @@ class CutOutView : View {
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
-    fun setImageBitmap(imageBitmap: Bitmap) {
+    override fun setImageBitmap(imageBitmap: Bitmap) {
+        super.setImageBitmap(imageBitmap)
         targetOriginalBitmap = imageBitmap
         actualVisibleBitmap = null
         invalidate()
@@ -77,16 +79,16 @@ class CutOutView : View {
             // If target's original bitmap is bigger than view size, adjust size for fit
             if (actualVisibleBitmap == null) actualVisibleBitmap = scaleBitmapAndKeepRation(
                 targetOriginalBitmap!!,
-                    height,
-                    width
-                )
+                height,
+                width
+            )
             canvas.drawBitmap(
                 actualVisibleBitmap!!,
                 (viewCanvasWidth / 2 - actualVisibleBitmap!!.width / 2).toFloat(),
                 (viewCanvasHeight / 2 - actualVisibleBitmap!!.height / 2).toFloat(),
                 null
             )
-            canvas.drawPath(path,paint)
+            canvas.drawPath(path, paint)
 
         } else {
             canvas.drawColor(Color.WHITE)
@@ -98,8 +100,8 @@ class CutOutView : View {
 
             canvas.drawText(
                 "Please set image bitmap for process",
-                (width/3).toFloat(),
-                (height/2).toFloat(),
+                (width / 3).toFloat(),
+                (height / 2).toFloat(),
                 textPaint
             )
             isReady = false
@@ -111,7 +113,7 @@ class CutOutView : View {
     fun scaleBitmapAndKeepRation(
         TargetBmp: Bitmap,
         reqHeightInPixels: Int,
-        reqWidthInPixels: Int
+        reqWidthInPixels: Int,
     ): Bitmap {
         val m = Matrix()
         m.setRectToRect(
@@ -121,6 +123,7 @@ class CutOutView : View {
         )
         return Bitmap.createBitmap(TargetBmp, 0, 0, TargetBmp.width, TargetBmp.height, m, true)
     }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (targetOriginalBitmap == null) {
@@ -146,6 +149,7 @@ class CutOutView : View {
                     isReady = false
                     listener(isReady)
                 }
+
                 MotionEvent.ACTION_MOVE -> {
 
                     path.quadTo(currentX, currentY, (x + currentX) / 2, (y + currentY) / 2)
@@ -153,18 +157,18 @@ class CutOutView : View {
                     currentY = y
 
                 }
+
                 MotionEvent.ACTION_UP -> {
                     path.quadTo(currentX, currentY, (x + currentX) / 2, (y + currentY) / 2)
-                    
-                    val distance = calculateDistance(startX,startY,currentX,currentY)
+
+                    val distance = calculateDistance(startX, startY, currentX, currentY)
 
                     if (distance < 100) {
-                        path.quadTo(x,y, startX , startY)
+                        path.quadTo(x, y, startX, startY)
 
                         isReady = true
                         listener(isReady)
-                    } else
-                    {
+                    } else {
                         Toast.makeText(
                             this.context,
                             context.getString(R.string.toast_text_cut_out),
@@ -185,7 +189,7 @@ class CutOutView : View {
         return super.onTouchEvent(event)
     }
 
-    private fun calculateDistance(startX: Float, startY: Float, endX: Float, endY: Float) : Double {
+    private fun calculateDistance(startX: Float, startY: Float, endX: Float, endY: Float): Double {
         val offsetX = endX - startX
         val offsetY = endY - startY
         return sqrt(offsetX.toDouble().pow(2.0) + offsetY.toDouble().pow(2.0))
@@ -199,7 +203,7 @@ class CutOutView : View {
         event?.let {
             path.lineTo(event.x, event.y)
             invalidate()
-            Log.e(TAG, "onDragEvent:" )
+            Log.e(TAG, "onDragEvent:")
             return true
         }
         return super.onDragEvent(event)
@@ -239,7 +243,7 @@ class CutOutView : View {
         return BitmapUtils.cropBitmapToBoundingBox(resultImage, Color.TRANSPARENT)
     }
 
-    fun cropImageWithShape(): Bitmap{
+    fun cropImageWithShape(): Bitmap {
         val resultImage =
             Bitmap.createBitmap(viewCanvasWidth, viewCanvasHeight, actualVisibleBitmap!!.config)
 
@@ -271,12 +275,12 @@ class CutOutView : View {
         return resultImage
     }
 
-    fun getIsReady() : Boolean {
+    fun getIsReady(): Boolean {
         return isReady
     }
 
     fun setOnCutOutListener(callback: (isReady: Boolean) -> Unit) {
-            listener = callback
+        listener = callback
     }
 
 }

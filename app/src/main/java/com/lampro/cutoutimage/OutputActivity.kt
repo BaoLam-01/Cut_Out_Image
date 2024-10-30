@@ -23,17 +23,33 @@ class OutputActivity : AppCompatActivity() {
             insets
         }
 
-        val bitmapUri = intent.getStringExtra("bitmapUri")?.let { Uri.parse(it) }
-        val bitmap = bitmapUri?.let { uri ->
-            contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
-        }
-
-
         val imgOutput = findViewById<ImageView>(R.id.imgOutput)
 
-        Log.e("TAG", "onCreate: " + bitmap )
+        val bitmapUri = intent.getStringExtra("bitmapUri")?.let { Uri.parse(it) } ?:run {
+            null
+        }
+        bitmapUri?.let {
+
+            val bitmap = bitmapUri?.let { uri ->
+                contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+            }
+
+
+
+            Log.e("TAG", "onCreate: " + bitmap)
 //        imgOutput.setImageBitmap(bitmap)
-        Glide.with(this).load(bitmap).into(imgOutput)
+            Glide.with(this).load(bitmap).into(imgOutput)
+        }
+
+        val croppedImage = intent.getByteArrayExtra("croppedImage")
+        if (croppedImage != null) {
+
+            val bitmap = BitmapFactory.decodeByteArray(croppedImage, 0, croppedImage.size)
+
+            Glide.with(this).load(bitmap).into(imgOutput)
+
+        }
+
 
     }
 }
