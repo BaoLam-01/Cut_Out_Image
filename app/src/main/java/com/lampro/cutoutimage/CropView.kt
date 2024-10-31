@@ -17,17 +17,21 @@ import java.io.ByteArrayOutputStream
 class CropView : androidx.appcompat.widget.AppCompatImageView {
 
     private var paint: Paint = Paint()
-    private val initial_size = 300
+    private val initialSize = 300
     private lateinit var leftTop: Point
     private lateinit var rightBottom: Point
     private lateinit var center: Point
     private lateinit var previous: Point
 
-    private val DRAG: Int = 0
-    private val LEFT: Int = 1
-    private val TOP: Int = 2
-    private val RIGHT: Int = 3
-    private val BOTTOM: Int = 4
+    companion object {
+
+        const val DRAG: Int = 0
+        const val LEFT: Int = 1
+        const val TOP: Int = 2
+        const val RIGHT: Int = 3
+        const val BOTTOM: Int = 4
+        const val RIGHT_BOTTOM: Int = 5
+    }
 
     private var imageScaledWidth = 0
     private var imageScaledHeight = 0
@@ -73,8 +77,8 @@ class CropView : androidx.appcompat.widget.AppCompatImageView {
 
     private fun resetPoints() {
         center.set(width / 2, height / 2);
-        leftTop.set((width - initial_size) / 2, (height - initial_size) / 2);
-        rightBottom.set(leftTop.x + initial_size, leftTop.y + initial_size);
+        leftTop.set((width - initialSize) / 2, (height - initialSize) / 2);
+        rightBottom.set(leftTop.x + initialSize, leftTop.y + initialSize);
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -153,6 +157,19 @@ class CropView : androidx.appcompat.widget.AppCompatImageView {
 
             }
 
+            RIGHT_BOTTOM -> {
+                movement = y - rightBottom.y
+                val movementX = x - rightBottom.x
+                if (isInImageRange(
+                        PointF(
+                            (rightBottom.x + movement).toFloat(),
+                            (rightBottom.y + movement).toFloat()
+                        )
+                    )
+                ) rightBottom.set(rightBottom.x + movementX, rightBottom.y + movement)
+
+            }
+
             DRAG -> {
                 movement = x - previous.x
                 val movementY = y - previous.y
@@ -177,10 +194,12 @@ class CropView : androidx.appcompat.widget.AppCompatImageView {
 
     private fun getAffectedSide(x: Int, y: Int): Int {
         val buffer = 10
-        return if (x >= (leftTop.x - buffer) && x <= (leftTop.x + buffer)) LEFT
-        else if (y >= (leftTop.y - buffer) && y <= (leftTop.y + buffer)) TOP
-        else if (x >= (rightBottom.x - buffer) && x <= (rightBottom.x + buffer)) RIGHT
-        else if (y >= (rightBottom.y - buffer) && y <= (rightBottom.y + buffer)) BOTTOM
+//        return if (x >= (leftTop.x - buffer) && x <= (leftTop.x + buffer)) LEFT
+//        else if (y >= (leftTop.y - buffer) && y <= (leftTop.y + buffer)) TOP
+//        else if (x >= (rightBottom.x - buffer) && x <= (rightBottom.x + buffer)) RIGHT
+//        else if (y >= (rightBottom.y - buffer) && y <= (rightBottom.y + buffer)) BOTTOM
+        return if (x >= (rightBottom.x - buffer) && x <= (rightBottom.x + buffer)
+                    && y >= (rightBottom.y - buffer) && y <= (rightBottom.y + buffer)) RIGHT_BOTTOM
         else DRAG
     }
 
@@ -193,7 +212,8 @@ class CropView : androidx.appcompat.widget.AppCompatImageView {
         imageScaledWidth = Math.round(drawable.intrinsicWidth * f[Matrix.MSCALE_X])
         imageScaledHeight = Math.round(drawable.intrinsicHeight * f[Matrix.MSCALE_Y])
 
-        return if (((point.x >= (center.x - (imageScaledWidth / 2)) && point.x <= center.x + (imageScaledWidth / 2) && point.y >= center.y - (imageScaledHeight / 2)) && point.y <= (center.y + (imageScaledHeight / 2)))) true else false
+        return (point.x >= (center.x - imageScaledWidth / 2) && point.x <= (center.x + imageScaledWidth / 2)
+                && point.y >= (center.y - imageScaledHeight / 2) && point.y <= center.y + imageScaledHeight / 2)
     }
 
 
